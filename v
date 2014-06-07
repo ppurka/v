@@ -16,13 +16,16 @@
     exit 1
 }
 
-[[ "$vim" ]] || {
-    [[ "$DISPLAY" ]] && vim="gvim" || vim="vim"
-}
-[[ $viminfo ]] || viminfo=~/.viminfo
 
 self="${0##*/}"
-usage="$(basename $0) [-a] [-l] [-[1-9]] [--debug] [--help] [regexes]"
+case "$self" in
+    vv) vim="vim" ;;
+    vg) vim="gvim" ;;
+    *)  [[ "$vim" ]] || {
+            [[ "$DISPLAY" ]] && vim="gvim" || vim="vim"
+        } ;;
+esac
+[[ $viminfo ]] || viminfo=~/.viminfo
 
 # Help me!!
 help() {
@@ -52,16 +55,22 @@ help() {
 
 [[ "$1" ]] || list=1
 
+declare -i all=0        # whether to display all files even if they do not
+                        # fit the terminal dimensions
+declare -i deleted=0    # display deleted files
+declare -i list=0       # whether to list the files
+declare -i edit         # the number corresponding to the file
 declare -a fnd
 until [[ -z "$@" ]]; do
     case "$1" in
-        -d|--deleted)   deleted=1;;
-        -l|--list)      list=1;;
-        -[1-9])         edit=${1:1}; shift;;
+        -a|--all)       all=1 ;;
+        -d|--deleted)   deleted=1 ;;
+        -l|--list)      list=1 ;;
+        -[1-9])         edit=${1:1}; shift ;;
         -h|--help)      help; exit 0 ;;
-        --debug)        vim=echo;;
-        --)             shift; fnd+=( "$@" ); break;;
-        *)              fnd+=( "$1" );;
+        --debug)        vim=echo ;;
+        --)             shift; fnd+=( "$@" ); break ;;
+        *)              fnd+=( "$1" ) ;;
     esac
     shift
 done
@@ -89,11 +98,13 @@ if [[ "$edit" ]]; then
 elif [[ "$i" = 1 || -z "$list" ]]; then
     resp=${files[1]}
 elif [[ "$i" ]]; then 
+    rows=$(( $(tput lines) - 1 ))
+    [[ $all -eq 0 && $i -gt $rows ]] && i=$rows
     while [[ $i -gt 0 ]]; do
          echo -e "$i\t${files[$i]}"
          i=$((i-1))
     done
-    read -p '> ' CHOICE
+    read -p 'Input number of file: ' CHOICE
     resp=${files[$CHOICE]}
 fi
 
