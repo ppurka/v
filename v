@@ -14,7 +14,6 @@
 #               Add path, files in which will be always ignored        #
 ignore_list=( \
             "/tmp/" \
-            "~/tmp/" \
             )
 #--------------------- END of USER configurations ---------------------#
 
@@ -41,7 +40,7 @@ help() {
     echo -e " $yellow ${self}:$normal"
     info "This program uses viminfo's list of recently edited files to open
     one quickly no matter where you are in the filesystem."
-    info "Usage:     ${self} [<options>] [regexes]"
+    info "Usage:     ${self} [<options>] [${blue}regexes$normal]"
     info "Options:
     -[1-9]          Open the most recent nth file, 1 ≤ n ≤ 9
     -a, --all       List all files. By default it lists only the most recent
@@ -54,10 +53,10 @@ help() {
     --no-color      Do not use color in output
     --              Pass on the rest of the options to $green$vim$normal
     "
-    info "You can use regexes like so:
+    info "You can use ${blue}regexes$normal like so:
     Example:
-    v '.*previous.py' # there is a file ending with previous.py
-    v '.*previous.*'  # same, except we do not provide extension
+    $self '.*previous.py' # there is a file ending with previous.py
+    $self 'previous.*'  # same, except we do not provide extension
     "
 }
 
@@ -103,7 +102,7 @@ while IFS=" " read line; do
     [[ "$match" ]] || continue
     ignore=0
     for ig in "${ignore_list[@]}"; do
-        if [[ "$fl" =~ $ig* ]]; then
+        if [[ "$fl" =~ ^$ig* ]]; then
             ignore=1
             break
         fi
