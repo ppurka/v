@@ -23,7 +23,8 @@ DESCRIPTION
 
 
 OPTIONS
-       -a           don't skip deleted files
+       -a           show all files
+       -d           don't skip deleted files
        -l           when multiple matches, show a list
        -[0-9]       edit nth most recent file
        --debug      dry run
@@ -35,6 +36,8 @@ EXAMPLES
        v -1         reopen most recently edited file
        v foo bar    edit first file matching foo and bar
        v -l foo bar list and choose files matching foo and bar
+       vg           open as gvim
+       vv           open as vim
 
 
 NOTES

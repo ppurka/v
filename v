@@ -53,6 +53,13 @@ help() {
     --no-color      Do not use color in output
     --              Pass on the rest of the options to $green$vim$normal
     "
+    info "Depending on how it is called, it determines whether to launch
+    vim or gvim. The three cases are as follows. Called as
+    ${green}vv$normal: launch as vim
+    ${green}vg$normal: launch as gvim
+    ${green}v$normal:  (or anything else) launch as vim if there is no
+        X server running, otherwise launch as gvim.
+    "
     info "You can use ${blue}regexes$normal like so:
     Example:
     $self '.*previous.py' # there is a file ending with previous.py
