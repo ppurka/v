@@ -9,13 +9,21 @@
         #                                       -ppurka             #
         #-----------------------------------------------------------#
 
+
+#----------------------- USER configurable variable -------------------#
+#               Add path, files in which will be always ignored        #
+ignore_list=( \
+            "/tmp/" \
+            "~/tmp/" \
+            )
+#--------------------- END of USER configurations ---------------------#
+
 . `which my_bash_functions 2> /dev/null` || {
     echo -e " \x1b[1;31mError!\x1b[0m The script \x1b[1;32mmy_bash_functions\
 \x1b[0m was not found in your \$PATH
         Please ensure that the script is available and executable"
     exit 1
 }
-
 
 self="${0##*/}"
 case "$self" in
@@ -57,9 +65,13 @@ help() {
 
 declare -i all=0        # whether to display all files even if they do not
                         # fit the terminal dimensions
+declare -i cols=$(( $(tput cols) - 11 )) # 8 for beginning, 3 for ...
 declare -i deleted=0    # display deleted files
-declare -i list=0       # whether to list the files
 declare -i edit         # the number corresponding to the file
+declare -i ignore       # boolean to flag whether a file should be ignored
+declare -i list=0       # whether to list the files
+declare -i rows=$(( $(tput lines) - 1 )) # 1 for last line
+declare -i tmplen       # temporary variable
 declare -a fnd
 until [[ -z "$@" ]]; do
     case "$1" in
@@ -89,8 +101,17 @@ while IFS=" " read line; do
         [[ "$fl" =~ $x ]] || match=
     done
     [[ "$match" ]] || continue
-    i=$((i+1))
-    files[$i]="$fl"
+    ignore=0
+    for ig in "${ignore_list[@]}"; do
+        if [[ "$fl" =~ $ig* ]]; then
+            ignore=1
+            break
+        fi
+    done
+    if [[ $ignore -eq 0 ]]; then
+        i=$((i+1))
+        files[$i]="$fl"
+    fi
 done < "$viminfo"
 
 if [[ "$edit" ]]; then
@@ -98,13 +119,20 @@ if [[ "$edit" ]]; then
 elif [[ "$i" = 1 || -z "$list" ]]; then
     resp=${files[1]}
 elif [[ "$i" ]]; then 
-    rows=$(( $(tput lines) - 1 ))
     [[ $all -eq 0 && $i -gt $rows ]] && i=$rows
     while [[ $i -gt 0 ]]; do
-         echo -e "$i\t${files[$i]}"
+        tmplen=$(echo "${files[$i]}" | wc -m)
+        if [[ $tmplen -gt $cols ]]; then
+            # truncate the beginning of the files
+            tmplen=$(( $tmplen - $cols ))
+            echo -e "$i\t$reverse${yellow}...$normal${files[$i]:$tmplen}"
+        else
+            echo -e "$i\t${files[$i]}"
+        fi
          i=$((i-1))
     done
-    read -p 'Input number of file: ' CHOICE
+    read -p 'Input number of file (q to quit): ' CHOICE
+    [[ $CHOICE = "q" ]] && exit 0
     resp=${files[$CHOICE]}
 fi
 
