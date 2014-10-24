@@ -42,7 +42,7 @@ help() {
     one quickly no matter where you are in the filesystem."
     info "Usage:     ${self} [<options>] [${blue}regexes$normal]"
     info "Options:
-    -[1-9]          Open the most recent nth file, 1 ≤ n ≤ 9
+    -[0-9]          Open the most recent nth file, 0 ≤ n ≤ 9
     -a, --all       List all files. By default it lists only the most recent
                     few files such that the list fits within the terminal
                     window.
@@ -75,6 +75,7 @@ declare -i cols=$(( $(tput cols) - 11 )) # 8 for beginning, 3 for ...
 declare -i deleted=0    # display deleted files
 declare -i edit         # the number corresponding to the file
 declare -i ignore       # boolean to flag whether a file should be ignored
+declare -i indx=-1      # index of the file, starts from 0
 declare -i list=0       # whether to list the files
 declare -i rows=$(( $(tput lines) - 1 )) # 1 for last line
 declare -i tmplen       # temporary variable
@@ -84,7 +85,7 @@ until [[ -z "$@" ]]; do
         -a|--all)       all=1 ;;
         -d|--deleted)   deleted=1 ;;
         -l|--list)      list=1 ;;
-        -[1-9])         edit=${1:1}; shift ;;
+        -[0-9])         edit=${1:1}; shift ;;
         -h|--help)      help; exit 0 ;;
         --debug)        vim=echo ;;
         --)             shift; fnd+=( "$@" ); break ;;
@@ -115,30 +116,30 @@ while IFS=" " read line; do
         fi
     done
     if [[ $ignore -eq 0 ]]; then
-        i=$((i+1))
-        files[$i]="$fl"
+        ((indx++))
+        files[$indx]="$fl"
     fi
 done < "$viminfo"
 
 if [[ "$edit" ]]; then
     resp=${files[$edit]}
-elif [[ "$i" = 1 || -z "$list" ]]; then
-    resp=${files[1]}
-elif [[ "$i" ]]; then 
-    [[ $all -eq 0 && $i -gt $rows ]] && i=$rows
-    while [[ $i -gt 0 ]]; do
-        tmplen=$(echo "${files[$i]}" | wc -m)
+elif [[ "$indx" -eq 0 || -z "$list" ]]; then
+    resp=${files[0]}
+elif [[ "$indx" ]]; then 
+    [[ $all -eq 0 && $indx -gt $rows ]] && indx=$rows
+    while [[ $indx -ge 0 ]]; do
+        tmplen=$(echo "${files[$indx]}" | wc -m)
         if [[ $tmplen -gt $cols ]]; then
             # truncate the beginning of the files
             tmplen=$(( $tmplen - $cols ))
-            f="${files[$i]:$tmplen}"
-            echo -e \
-                "$i\t$reverse${yellow}...$normal${f%/*}/$bold${f##*/}$normal"
+            f="${files[$indx]:$tmplen}"
+            echo -ne "$indx\t$reverse${yellow}...$normal"
+            echo -e  "${f%/*}/$bold${f##*/}$normal"
         else
-            f="${files[$i]}"
-            echo -e "$i\t${f%/*}/$bold${f##*/}$normal"
+            f="${files[$indx]}"
+            echo -e "$indx\t${f%/*}/$bold${f##*/}$normal"
         fi
-         i=$((i-1))
+        ((indx--))
     done
     read -p 'Input number of file (q to quit): ' CHOICE
     [[ $CHOICE = "q" ]] && exit 0
