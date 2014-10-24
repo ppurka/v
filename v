@@ -131,9 +131,12 @@ elif [[ "$i" ]]; then
         if [[ $tmplen -gt $cols ]]; then
             # truncate the beginning of the files
             tmplen=$(( $tmplen - $cols ))
-            echo -e "$i\t$reverse${yellow}...$normal${files[$i]:$tmplen}"
+            f="${files[$i]:$tmplen}"
+            echo -e \
+                "$i\t$reverse${yellow}...$normal${f%/*}/$bold${f##*/}$normal"
         else
-            echo -e "$i\t${files[$i]}"
+            f="${files[$i]}"
+            echo -e "$i\t${f%/*}/$bold${f##*/}$normal"
         fi
          i=$((i-1))
     done
