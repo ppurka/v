@@ -57,7 +57,10 @@ NOTES
 SEE ALSO
        vim(1), regex(7)
 
-       Please file bugs at https://github.com/rupa/v/
+       This is a fork of https://github.com/rupa/v to make it have more
+       bashisms and add a few more features.
+
+       Please file bugs at https://github.com/ppurka/v/
 
 
 
